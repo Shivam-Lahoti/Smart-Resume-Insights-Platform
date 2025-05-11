@@ -9,7 +9,7 @@ logger= logging.getLogger(__name__)
 router = APIRouter()
 
 @router.post("/upload")
-async def upload_resume(files: list[UploadFile] = File(...)): # Renamed 'file' to 'files' for clarity
+async def upload_resume(files: list[UploadFile] = File(...)):
     if not (1 <= len(files) <= 2):
         raise HTTPException(status_code=400, detail="You can upload upto 2 files at a time.")
     
@@ -40,7 +40,7 @@ async def upload_resume(files: list[UploadFile] = File(...)): # Renamed 'file' t
                 file_result["status"] = "processed"
                 file_result["message"] = "File processed successfully."
                 file_result["preview"] = (text[:997] + "...") if len(text) > 1000 else text
-                # You might want to store the full 'text' somewhere or pass it for further processing
+                # Store the full 'text' somewhere or pass it for further processing
             else:
                 file_result["status"] = "failed_extraction"
                 file_result["error"] = "Error extracting text from the file."
