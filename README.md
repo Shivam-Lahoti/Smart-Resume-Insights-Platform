@@ -147,6 +147,8 @@ Visit: [http://localhost:8000/docs](http://localhost:8000/docs)
 * ✅ AI/NLP scoring engine using spaCy or transformers
 * ✅ Frontend dashboard (React or Next.js)
 * ✅ MongoDB or PostgreSQL integration
+* ✅ 🧠 Resume Summarizer (LLM Prompting)
+* ✅ ⚖️ Job Match Analysis (RAG + LLM)
 
 ---
 
