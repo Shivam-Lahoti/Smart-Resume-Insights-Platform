@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
-from app.services.parser import extract_text_pdf, extract_text_docx
+from app.services.parser import extract_text_pdf, extract_text_docx, extract_fields
 import logging
 
 logger= logging.getLogger(__name__)
@@ -32,14 +32,15 @@ async def upload_resume(files: list[UploadFile] = File(...)):
 
             text = None
             if current_file.filename.endswith(".pdf"):
-                text = extract_text_pdf(contents)
+                text=  extract_text_pdf(contents)
             elif current_file.filename.endswith(".docx"):
-                text = extract_text_docx(contents)
-            
+                text= extract_text_docx(contents)
+                   
             if text is not None: # Check if text extraction was successful (parser returns None on error)
                 file_result["status"] = "processed"
                 file_result["message"] = "File processed successfully."
                 file_result["preview"] = (text[:997] + "...") if len(text) > 1000 else text
+                file_result["extracted_fields"]= extract_fields(text)
                 # Store the full 'text' somewhere or pass it for further processing
             else:
                 file_result["status"] = "failed_extraction"
