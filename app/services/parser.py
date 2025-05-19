@@ -1,4 +1,6 @@
 import fitz
+import spacy
+from spacy.matcher import PhraseMatcher
 import docx
 from io import BytesIO
 from typing import Optional
@@ -6,6 +8,8 @@ import logging
 import re
 import fitz.fitz
 
+#load Spacy
+nlp= spacy.load("en_core_web_sm")
 
 logger = logging.getLogger(__name__)
 
@@ -15,18 +19,32 @@ SKILL_KEYWORDS = [
     "tensorflow", "pytorch", "flask", "pyspark", "airflow", "github", "aws", "ec2",
     "lambda", "glue", "redshift", "docker", "kubernetes", "git", "hadoop",
     "team work", "adaptability", "leadership experience", "problem-solving", "agile",
-    "cross functional", "detail oriented"
+    "cross functional", "detail oriented", "quality assurance", "strong communication", "drafting", 
+    "research", "problem solving"
 ]
+
+matcher= PhraseMatcher(nlp.vocab, attr="LOWER")
+skill_patterns= [nlp.make_doc(skill) for skill in SKILL_KEYWORDS]
+matcher.add("SKILLS", skill_patterns)
+
 
 #Extract Fields
 def extract_fields(text: str) -> dict:
     lines= text.splitlines()
-    non_empty_lines= [line.strip() for line in lines if line.strip()]
-    normalized_text= text.lower()
-    print(normalized_text)
+    non_empty_lines= [line for line in lines if line.strip()]
+
+
+    doc= nlp(text)
+
+    print("\n-------spaCy named entities-------")
+    for ent in doc.ents:
+        print(ent.text,"->", ent.label_)
+
+
+
 
     #Name
-    name= non_empty_lines[0] if non_empty_lines else ""
+    name= next((ent.text for ent in doc.ents if ent.label_== "PERSON"),"")
 
     #email
     email_match= re.search(r"[a-zA-Z0-9_.=-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", text)
@@ -34,41 +52,37 @@ def extract_fields(text: str) -> dict:
 
     #Phone
     Phone_match=re.search(r"(\+?\d{1,3}[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?\d{3}[-.\s]?\d{4}", text)
-    Phone= Phone_match.group() if Phone_match else ""
+    phone_number= Phone_match.group() if Phone_match else ""
 
     #LinkedIn
     linkedin_match= re.search(r"(https?://)?(www\.)?linkedin\.com\/[a-zA-Z0-9\-_/]+", text, re.IGNORECASE)
-    linkedin= linkedin_match.group() if linkedin_match else ""
+    linkedin= linkedin_match.group(0) if linkedin_match else ""
 
     #Github
     github_match= re.search(r"(https?://)?(www\.)?github\.com/[a-zA-Z0-9-_]+",text)
     github= github_match.group() if github_match else ""
 
     #Addres
-    address= ""
-    for line in non_empty_lines[0:5]:
-        line_lower = line.lower()
-        location_keywords=["street", "st", "road", "rd", "lane", "blvd", "ave", "city", "zip", "state", "massachusetts", "india", "usa"]
-        contact_keywords= ["@", "linkedin.com", "github.com", "http", "www.", ".com", "gmail"]
-        if (
-            any(word in line_lower for word in location_keywords)
-                and not any(kw in line_lower for kw in contact_keywords )
-            ):
-                address = line.strip()
-                break
+    address = next((ent.text for ent in doc.ents if ent.label_ in {"GPE", "LOC"}), "")
+
+    
+
     #Skills
     # Skills: exact matches from SKILL_KEYWORDS
-    found_skills = set()
-    for skill in SKILL_KEYWORDS:
-        if skill.lower() in normalized_text:
-            print(f"Skill Matched: {skill},")
-            found_skills.add(skill.lower())
+    
+    matches= matcher(doc)
+    found_skills = set([doc[start:end].text.lower() for _, start, end in matches])
+
+    print("\n----mtached skills----")
+    for skill in found_skills:
+        print(skill)
+
 
         
     return {
         "name": name if name else "Not Available",
         "email": email if email else "Not Available",
-        "phone": Phone if Phone else "Not Available",
+        "phone": phone_number if phone_number else "Not Available",
         "linkedin": linkedin if linkedin else "Not Available",
         "github": github if github else "Not Available",
         "skills": list(found_skills) if found_skills else ["Not Available"],

@@ -1,17 +1,18 @@
 # 🧠 Smart Resume Insights Platform (SRIP)
 
-A FastAPI-powered backend service that allows users to upload resume files (PDF/DOCX), extract their text content, and preview it for further AI-based analysis. SRIP is designed to serve as the foundation for a full-stack platform that provides career insights, resume optimization, and job matching capabilities.
+A FastAPI-powered backend service that allows users to upload resume files (PDF/DOCX), extract their text content and structured fields, and preview it for further AI-based analysis. SRIP is designed as the foundation for a full-stack platform that provides career insights, resume optimization, and job matching capabilities.
 
 ---
 
 ## 🚀 Features
 
-* Upload support for 1 or 2 resume files at a time
-* Parses PDF and DOCX files using PyMuPDF and python-docx
-* Extracts and previews up to 1000 characters from resume content
-* Validates file types and limits uploads to only PDF or DOCX
-* Logs errors and exceptions for debugging
-* Extensible architecture for future AI/NLP capabilities
+- Upload support for 1 or 2 resume files at a time
+- Parses PDF and DOCX using PyMuPDF and python-docx
+- Extracts structured fields: name, email, phone, LinkedIn, GitHub, address, skills
+- Upload JD as file or raw text and extract JD skills
+- Match resume skills against job description (JD) skills
+- Logs errors and exceptions for easy debugging
+- Extensible design for LLM-based analysis, summarization, and recommendation
 
 ---
 
@@ -20,38 +21,27 @@ A FastAPI-powered backend service that allows users to upload resume files (PDF/
 ```
 SRIP/
 ├── app/
-│   ├── api/v1/resume.py         # Upload endpoint and logic
-│   ├── services/parser.py       # Resume parsing functions (PDF/DOCX)
-│   └── main.py                  # FastAPI entry point
-├── tests/                       # Placeholder for unit tests
+│   ├── api/v1/resume.py         # Resume upload & parsing logic
+│   ├── api/v1/job.py            # JD upload & skill matching endpoints
+│   ├── services/parser.py       # Extraction logic (PDF, DOCX, skills, NER)
+│   └── main.py                  # FastAPI app entry point
 ├── requirements.txt             # Python dependencies
 ├── README.md                    # Project documentation
-└── __init__.py                  # Marks SRIP as a Python package
+└── __init__.py
 ```
 
 ---
 
 ## 📄 Requirements
 
-* Python 3.10 or newer
-* pip (Python package installer)
+- Python 3.10+
+- pip (Python package installer)
 
-### Python Libraries:
-
-Install via:
+### Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
-
-Libraries used:
-
-* fastapi
-* uvicorn
-* python-docx
-* PyMuPDF
-* pydantic
-* python-multipart
 
 ---
 
@@ -60,30 +50,24 @@ Libraries used:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/srip.git
-cd srip
+git clone https://github.com/your-username/smart-resume-insights.git
+cd smart-resume-insights
 ```
 
-### 2. Create a Virtual Environment
+### 2. Create and Activate Virtual Environment
 
 ```bash
 python -m venv env
-# Windows:
+# Windows
 env\Scripts\activate
-# macOS/Linux:
+# macOS/Linux
 source env/bin/activate
 ```
 
-### 3. Install Dependencies
+### 3. Run the API Server
 
 ```bash
-pip install -r requirements.txt
-```
-
-### 4. Run the Server
-
-```bash
-# If you're in SRIP directory:
+# Set PYTHONPATH
 $env:PYTHONPATH="SRIP"       # On Windows
 export PYTHONPATH=SRIP       # On Mac/Linux
 
@@ -92,75 +76,122 @@ uvicorn app.main:app --reload
 
 ---
 
-## 🌐 API Usage
+## 🌐 API Usage (via Swagger)
 
-### Endpoint:
+Open in browser:  
+👉 http://localhost:8000/docs
+
+---
+
+## 📤 Resume Upload
 
 ```
 POST /api/v1/resume/upload
 ```
 
-### Swagger UI:
+### Accepts:
+- 1 or 2 `.pdf` or `.docx` files
+- Extracts text, name, email, phone, address, skills
 
-Visit: [http://localhost:8000/docs](http://localhost:8000/docs)
-
-### Request Format:
-
-* Content-Type: `multipart/form-data`
-* Form field: `files` (send 1 or 2 files)
-* Supported formats: `.pdf`, `.docx`
-
-### Example Response:
-
+### Response:
 ```json
 [
   {
-    "filename": "resume1.pdf",
-    "content_type": "application/pdf",
-    "size_kb": 120.5,
+    "filename": "resume.pdf",
     "status": "processed",
-    "message": "File processed successfully.",
-    "preview": "John Doe\nSoftware Engineer..."
-  },
-  {
-    "filename": "notes.txt",
-    "status": "failed_validation",
-    "error": "Invalid file type. Only PDF or DOCX files are allowed."
+    "preview": "Shivam Lahoti\n95, Boylston St, Brookline, MA...",
+    "extracted_fields": {
+      "name": "Shivam Lahoti",
+      "email": "shivam.2199@gmail.com",
+      "skills": ["python", "aws", "docker", "kubernetes", ...]
+    }
   }
 ]
 ```
 
 ---
 
+## 📋 Job Description Upload
+
+```
+POST /api/v1/job/upload-jd
+```
+
+### Accepts:
+- JD as `.pdf`, `.docx`, `.txt`, or raw pasted text
+
+### Response:
+```json
+{
+  "jd_text": "We are hiring a backend engineer...",
+  "extracted_jd_skills": ["python", "aws", "docker", "kubernetes", ...],
+  "match_count": 10
+}
+```
+
+---
+
+## 🎯 Resume–JD Skill Match
+
+```
+POST /api/v1/job/match
+```
+
+### Sample Request:
+```json
+{
+  "resume_skills": ["python", "docker", "aws", "git"],
+  "jd_skills": ["python", "docker", "aws", "postgresql", "kubernetes"]
+}
+```
+
+### Response:
+```json
+{
+  "matched_skills": ["aws", "docker", "python"],
+  "missing_skills": ["kubernetes", "postgresql"],
+  "match_percent": 60.0,
+  "resume_skill_count": 4,
+  "jd_skill_count": 5
+}
+```
+
+---
+
 ## 🚪 Error Handling
 
-* Uploading more than 2 files: `400 Bad Request`
-* Invalid file type: `400 Bad Request`
-* Internal parsing failure: `500 Internal Server Error`
+| Scenario                       | Response Code | Message                                      |
+|-------------------------------|---------------|----------------------------------------------|
+| More than 2 files uploaded     | 400           | "You can upload up to 2 files at a time."    |
+| Invalid file type              | 400           | "Only PDF or DOCX files are allowed."        |
+| No JD text provided            | 400           | "JD text is empty or could not be read."     |
+| File parsing failure           | 500           | "An unexpected error occurred during parsing."|
 
 ---
 
-## 🔧 Future Roadmap
+## 🧩 Future Roadmap
 
-* ✅ Extract structured fields: name, email, phone, skills, etc.
-* ✅ Job description upload and matching
-* ✅ AI/NLP scoring engine using spaCy or transformers
-* ✅ Frontend dashboard (React or Next.js)
-* ✅ MongoDB or PostgreSQL integration
-* ✅ 🧠 Resume Summarizer (LLM Prompting)
-* ✅ ⚖️ Job Match Analysis (RAG + LLM)
+- ✅ Resume parsing + structured field extraction
+- ✅ JD upload and skill extraction
+- ✅ Resume–JD skill match scoring
+- ⏳ Resume summarizer (LLM)
+- ⏳ RAG-based job recommendation engine
+- ⏳ MongoDB/PostgreSQL integration
+- ⏳ Frontend (Streamlit / React)
+- ⏳ Docker containerization
+- ⏳ Deployment on Render / AWS
 
 ---
 
-## 👨‍💼 Author
+## 👨‍💻 Author
 
-**Shivam Lahoti**
-Graduate Student
-
-[Shivam Lahoti-LinkedIn](https://www.linkedin.com/in/shivam-lahoti-2811501b1/)
+**Shivam Lahoti**  
+Graduate Student, Northeastern University  
+📧 shivam.2199@gmail.com  
+🔗 [LinkedIn](https://www.linkedin.com/in/shivam-lahoti-2811501b1/)
 
 ---
 
 ## 📃 License
 
-MIT License. You are free to use, modify, and distribute this software.
+MIT License – use freely with attribution.
