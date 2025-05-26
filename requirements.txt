@@ -14,3 +14,6 @@ numpy==1.26.4
 
 python-multipart==0.0.9  # Needed for file uploads
 pydantic==2.7.0          # Data validation
+
+google-generativeai
+python-dotenv

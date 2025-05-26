@@ -5,6 +5,10 @@ from app.services.parser import extract_fields,extract_text_docx,extract_text_pd
 from pydantic import BaseModel
 from typing import List,Set
 
+def normalize_skills(skills: list[str]) -> set[str]:
+    return {s.lower().replace("-", " ").replace("_", " ").strip() for s in skills}
+
+
 
 router = APIRouter()
 
@@ -63,8 +67,9 @@ class MatchRequest(BaseModel):
 
 @router.post("/match")
 async def resume_match_skills(data: MatchRequest):
-    resume_set: Set[str]= set(map(str.lower, data.resume_skills))
-    jd_set: Set[str] = set(map(str.lower, data.jd_skills))
+    resume_set = normalize_skills(data.resume_skills)
+    jd_set = normalize_skills(data.jd_skills)
+
     
     matched_skills= sorted(resume_set.intersection(jd_set))
     missing_skills= sorted(jd_set-resume_set)
