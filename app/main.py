@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 from app.api.v1 import resume,job,match
+import logging
+
+logging.basicConfig(level= logging.INFO, format= "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
 app = FastAPI(title="Smart Resume Insights Platfrom")
 

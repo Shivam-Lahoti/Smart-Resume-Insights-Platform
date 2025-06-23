@@ -8,6 +8,7 @@ PyMuPDF==1.23.24
 spacy==3.7.2
 scikit-learn==1.4.2
 pandas==2.2.2
+sentence-transformers 
 # Resume parsing and data handling
 pdfminer.six==20231228   # Alternate option to PyMuPDF
 numpy==1.26.4
