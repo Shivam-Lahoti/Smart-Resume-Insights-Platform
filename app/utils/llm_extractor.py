@@ -113,3 +113,32 @@ def enrich_jd_skills_with_llm(jd_text: str, extracted_skills: list[str]) -> list
     except Exception as e:
         logger.warning("LLM JD enrichment failed: %s", e)
         return [s.lower() for s in extracted_skills]
+    
+
+
+def generate_llm_recommendation(jd_keywords: set, resume_keywords: set, missing_keywords: list[str]) -> str:
+    """
+    Generate a short, actionable recommendation based on missing JD keywords in the resume.
+    """
+    try:
+        prompt = f"""
+            You are an AI assistant helping job seekers improve their resumes.
+
+            Here are the keywords extracted from the job description:
+            {sorted(jd_keywords)}
+
+            Here are the keywords extracted from the candidate's resume:
+            {sorted(resume_keywords)}
+
+            The following important keywords are missing from the resume:
+            {missing_keywords}
+
+            Based on this, provide a short, actionable recommendation on how the candidate can improve their resume to better match the job description.
+            Do not return JSON. Just return a human-friendly recommendation.
+        """
+        response = model.generate_content(prompt)
+        return response.text.strip()
+
+    except Exception as e:
+        logger.warning("LLM recommendation generation failed: %s", e)
+        return "LLM recommendation could not be generated."

@@ -18,3 +18,8 @@ pydantic==2.7.0          # Data validation
 
 google-generativeai
 python-dotenv
+
+sqlalchemy >=1.4,<2.1
+
+passlib[bcrypt]
+python-jose[cryptogrpahy]

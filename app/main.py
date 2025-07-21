@@ -19,4 +19,4 @@ app.include_router(match.router, prefix="/api/v1/match", tags=["Match"])
 
 @app.get("/")
 def root():
-    return{"messagae":"Smart Resume Insights Platfrom is up and running"}
+    return{"message":"Smart Resume Insights Platfrom is up and running"}
